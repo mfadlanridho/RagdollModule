@@ -11,12 +11,20 @@ local script = script
 local Types = require(script.Types)
 local JointBuilder = require(script.JointBuilder)
 local CharacterController = require(script.CharacterController)
+local NetworkBridge = require(script.NetworkBridge)
 
 export type RagdollOptions = Types.RagdollOptions
 export type RagdollSession = Types.RagdollSession
+export type NetworkProvider = NetworkBridge.NetworkProvider
 
 local RagdollModule = {}
 RagdollModule.__index = RagdollModule
+RagdollModule.NetworkBridge = NetworkBridge
+
+--- Sets a custom network provider (ByteNet, RemoteEvent, or custom) for RagdollModule
+function RagdollModule.setNetworkProvider(provider: NetworkProvider)
+	NetworkBridge.setProvider(provider)
+end
 
 local activeSessions: { [Model]: RagdollSession } = {}
 
