@@ -33,7 +33,10 @@ local activeSessions: { [Model]: RagdollSession } = {}
 local platformStandSessions: { [Model]: CharacterController.OriginalPartData } = {}
 
 --- Toggles lightweight PlatformStand disabler on a character (preserves character joint structures while disabling standing movement)
-function RagdollModule.SetPlatformStand(character: Model, enabled: boolean)
+-- @param character Model
+-- @param enabled boolean
+-- @param stopAnimations boolean? Optional flag to stop playing animation tracks on Humanoid Animator
+function RagdollModule.SetPlatformStand(character: Model, enabled: boolean, stopAnimations: boolean?)
 	if not character then return end
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if not humanoid or humanoid.Health <= 0 then return end
@@ -43,8 +46,29 @@ function RagdollModule.SetPlatformStand(character: Model, enabled: boolean)
 		if not platformStandSessions[character] then
 			platformStandSessions[character] = CharacterController.EnableLimbCollisions(character)
 		end
+
+		-- Optionally stop active animation tracks and disable Roblox default Animate script if requested
+		if stopAnimations == true then
+			local animateScript = character:FindFirstChild("Animate")
+			if animateScript and animateScript:IsA("LocalScript") then
+				animateScript.Enabled = false
+			end
+
+			local animator = humanoid:FindFirstChildOfClass("Animator") :: Animator?
+			if animator then
+				for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+					track:Stop(0)
+				end
+			end
+		end
+
 		log(string.format("🟢 ENABLED PlatformStand disabler for %s", character.Name))
 	else
+		local animateScript = character:FindFirstChild("Animate")
+		if animateScript and animateScript:IsA("LocalScript") then
+			animateScript.Enabled = true
+		end
+
 		local origData = platformStandSessions[character]
 		if origData then
 			CharacterController.RestoreLimbCollisions(origData)
@@ -105,7 +129,12 @@ function RagdollModule.Enable(character: Model, options: (number | RagdollOption
 	CharacterController.PrepareHumanoid(humanoid)
 	session.originalCollisions = CharacterController.EnableLimbCollisions(character)
 
-	-- Stop playing animation tracks on Humanoid Animator
+	-- Stop playing animation tracks and disable Roblox default Animate script
+	local animateScript = character:FindFirstChild("Animate")
+	if animateScript and animateScript:IsA("LocalScript") then
+		animateScript.Enabled = false
+	end
+
 	local animator = humanoid:FindFirstChildOfClass("Animator")
 	if animator then
 		for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
@@ -214,6 +243,11 @@ function RagdollModule.Disable(character: Model)
 	CharacterController.RestoreLimbCollisions(session.originalCollisions)
 	if session.humanoid and session.humanoid.Parent then
 		CharacterController.RestoreHumanoid(session.humanoid)
+	end
+
+	local animateScript = character:FindFirstChild("Animate")
+	if animateScript and animateScript:IsA("LocalScript") then
+		animateScript.Enabled = true
 	end
 
 	activeSessions[character] = nil
