@@ -17,6 +17,8 @@ local Logger = require(ReplicatedStorage.Packages.LoggerModule)
 
 local log = Logger.create("RagdollModule")
 
+local State = require(script:WaitForChild("State") :: ModuleScript)
+
 export type RagdollOptions = Types.RagdollOptions
 export type RagdollSession = Types.RagdollSession
 export type NetworkProvider = NetworkBridge.NetworkProvider
@@ -24,6 +26,7 @@ export type NetworkProvider = NetworkBridge.NetworkProvider
 local RagdollModule = {}
 RagdollModule.__index = RagdollModule
 RagdollModule.NetworkBridge = NetworkBridge
+RagdollModule.State = State
 
 function RagdollModule.setNetworkProvider(provider: NetworkProvider)
 	NetworkBridge.setProvider(provider)
