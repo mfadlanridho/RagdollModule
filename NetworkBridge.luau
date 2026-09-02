@@ -107,10 +107,18 @@ function NetworkBridge.listen(actionName: string, callback: (payload: any, playe
 				callback(payload, player)
 			end)
 		elseif RunService:IsClient() then
-			local remote = remotesFolder:WaitForChild("RagdollModule_" .. actionName, 5) :: RemoteEvent?
+			local remoteName = "RagdollModule_" .. actionName
+			local remote = remotesFolder:FindFirstChild(remoteName) :: RemoteEvent?
 			if remote then
 				remote.OnClientEvent:Connect(function(payload)
 					callback(payload, nil :: any)
+				end)
+			else
+				task.spawn(function()
+					local r = remotesFolder:WaitForChild(remoteName) :: RemoteEvent
+					r.OnClientEvent:Connect(function(payload)
+						callback(payload, nil :: any)
+					end)
 				end)
 			end
 		end

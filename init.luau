@@ -8,6 +8,8 @@
 local task = task
 local script = script
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Types = require(script.Types)
 local JointBuilder = require(script.JointBuilder)
@@ -66,6 +68,13 @@ function RagdollModule.SetPlatformStand(character: Model, enabled: boolean, stop
 					track:Stop(0)
 				end
 			end
+
+			if RunService:IsServer() then
+				local player = Players:GetPlayerFromCharacter(character)
+				if player then
+					NetworkBridge.send("ToggleAnimations", { enabled = false }, player)
+				end
+			end
 		end
 
 		log(string.format("🟢 ENABLED PlatformStand disabler for %s", character.Name))
@@ -73,6 +82,13 @@ function RagdollModule.SetPlatformStand(character: Model, enabled: boolean, stop
 		local animateScript = character:FindFirstChild("Animate")
 		if animateScript and animateScript:IsA("LocalScript") then
 			animateScript.Enabled = true
+		end
+
+		if RunService:IsServer() then
+			local player = Players:GetPlayerFromCharacter(character)
+			if player then
+				NetworkBridge.send("ToggleAnimations", { enabled = true }, player)
+			end
 		end
 
 		local origData = platformStandSessions[character]
@@ -275,6 +291,48 @@ end
 -- @return boolean
 function RagdollModule.IsRagdolled(character: Model): boolean
 	return activeSessions[character] ~= nil or platformStandSessions[character] ~= nil
+end
+
+-- Server-side pre-creation of RemoteEvent so client connects immediately with zero timeout
+if RunService:IsServer() then
+	local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+	if not remotes then
+		remotes = Instance.new("Folder")
+		remotes.Name = "Remotes"
+		remotes.Parent = ReplicatedStorage
+	end
+	if not remotes:FindFirstChild("RagdollModule_ToggleAnimations") then
+		local remote = Instance.new("RemoteEvent")
+		remote.Name = "RagdollModule_ToggleAnimations"
+		remote.Parent = remotes
+	end
+end
+
+-- Client-side listener to suppress Animate script and stop active animation tracks
+if RunService:IsClient() then
+	NetworkBridge.listen("ToggleAnimations", function(payload)
+		local localPlayer = Players.LocalPlayer
+		local character = localPlayer and localPlayer.Character
+		if not character then return end
+
+		local isEnabled = payload and payload.enabled
+		local animateScript = character:FindFirstChild("Animate")
+		if animateScript and animateScript:IsA("LocalScript") then
+			animateScript.Enabled = isEnabled
+		end
+
+		if not isEnabled then
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			local animator = humanoid and humanoid:FindFirstChildOfClass("Animator")
+			if animator then
+				for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+					track:Stop(0)
+				end
+			end
+		end
+
+		log(string.format("🎬 [RagdollModule Client] ToggleAnimations set to: %s", tostring(isEnabled)))
+	end)
 end
 
 return RagdollModule
