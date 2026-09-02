@@ -49,4 +49,31 @@ function JointBuilder.CreateRagdollJoint(
 	return ballSocket, att0, att1, noCollide
 end
 
+--- Creates NoCollisionConstraints between all BaseParts in the character model
+function JointBuilder.CreateFullBodyNoCollisions(character: Model): { NoCollisionConstraint }
+	local constraints: { NoCollisionConstraint } = {}
+	local parts: { BasePart } = {}
+
+	for _, child in ipairs(character:GetDescendants()) do
+		if child:IsA("BasePart") then
+			table.insert(parts, child)
+		end
+	end
+
+	for i = 1, #parts do
+		for j = i + 1, #parts do
+			local p0 = parts[i]
+			local p1 = parts[j]
+			local nc = Instance.new("NoCollisionConstraint")
+			nc.Name = string.format("RagdollFullNoCollide_%s_%s", p0.Name, p1.Name)
+			nc.Part0 = p0
+			nc.Part1 = p1
+			nc.Parent = p1
+			table.insert(constraints, nc)
+		end
+	end
+
+	return constraints
+end
+
 return JointBuilder
