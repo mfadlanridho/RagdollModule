@@ -81,5 +81,45 @@ RagdollModule.Enable(character, {
 
 ---
 
+## 🎮 FSM State Integration (`RagdollModule.State`)
+
+`RagdollModule` includes a pre-built StateDefinition for seamless integration with `StateMachineModule`:
+
+```luau
+local StateMachine = require(ReplicatedStorage.Packages.StateMachineModule)
+local RagdollModule = require(ReplicatedStorage.Packages.RagdollModule)
+
+-- Register state into your FSM:
+machine:registerState(RagdollModule.State)
+```
+
+### Configurable Modes: Full Ragdoll vs. PlatformStand Knockdown
+
+You can configure whether a state transition performs a **Full floppy ragdoll** or a **PlatformStand knockdown**:
+
+1. **Global Default**:
+   ```luau
+   RagdollModule.DefaultMode = "Full" -- or "PlatformStand"
+   ```
+
+2. **Per-Attack / Per-Hazard Override (via payload)**:
+   ```luau
+   -- Full floppy ragdoll (explosions, heavy knockbacks)
+   PlayerFSM.SetState(player, "Ragdolled", {
+       mode = "Full",
+       duration = 2.5,
+       launchVector = Vector3.new(0, 35, -50),
+   })
+
+   -- Lightweight PlatformStand knockdown (tripwires, minor stuns)
+   PlayerFSM.SetState(player, "Ragdolled", {
+       mode = "PlatformStand",
+       duration = 1.0,
+       launchVector = Vector3.new(0, 10, -15),
+   })
+   ```
+
+---
+
 ## 📄 License
 MIT License - Free for use across all your Roblox projects.

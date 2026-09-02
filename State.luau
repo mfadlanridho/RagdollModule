@@ -30,6 +30,9 @@ local RagdollState = {
 
 		local payload = context.payload
 		local launchVector = payload and payload.launchVector
+		local module = getRagdollModule()
+		local mode = (payload and (payload.mode or payload.ragdollType)) or module.DefaultMode or "Full"
+		context._activeRagdollMode = mode
 
 		local char = context.character or (context.player and context.player.Character)
 		if char then
@@ -41,18 +44,30 @@ local RagdollState = {
 				end
 			end
 
-			-- Enable full physics ragdoll with joint disassembly
-			getRagdollModule().Enable(char)
+			-- Execute selected mode: Lightweight PlatformStand knockdown vs Full floppy ragdoll
+			if mode == "PlatformStand" then
+				module.SetPlatformStand(char, true, true)
+			else
+				module.Enable(char)
+			end
 		end
 	end,
 
 	exit = function(context, toState)
 		print(string.format("[RagdollState] %s recovering from Ragdoll state.", context.player and context.player.Name or "Unknown"))
 
-		-- Restore humanoid to normal standing state, restore Motor6Ds & re-enable animations
 		local char = context.character or (context.player and context.player.Character)
 		if char and char.Parent then
-			getRagdollModule().Disable(char)
+			local module = getRagdollModule()
+			local mode = context._activeRagdollMode or module.DefaultMode or "Full"
+
+			-- Restore based on which mode was enabled
+			if mode == "PlatformStand" then
+				module.SetPlatformStand(char, false, false)
+			else
+				module.Disable(char)
+			end
+			context._activeRagdollMode = nil
 		end
 	end,
 

@@ -23,11 +23,13 @@ local State = require(script:WaitForChild("State") :: ModuleScript)
 export type RagdollOptions = Types.RagdollOptions
 export type RagdollSession = Types.RagdollSession
 export type NetworkProvider = NetworkBridge.NetworkProvider
+export type RagdollMode = "Full" | "PlatformStand"
 
 local RagdollModule = {}
 RagdollModule.__index = RagdollModule
 RagdollModule.NetworkBridge = NetworkBridge
 RagdollModule.State = State
+RagdollModule.DefaultMode = "Full" :: RagdollMode
 
 function RagdollModule.setNetworkProvider(provider: NetworkProvider)
 	NetworkBridge.setProvider(provider)
