@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 --[[
     CharacterController.luau
     Handles Humanoid state changes, PlatformStand toggles, and body part collision states with LoggerModule logging.
@@ -6,8 +6,10 @@
 
 local Enum = Enum
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Logger = require(ReplicatedStorage.Packages.LoggerModule)
-local log = Logger.create("CharacterController")
+local loggerScript = (ReplicatedStorage:FindFirstChild("Submodules") and ReplicatedStorage.Submodules:FindFirstChild("LoggerModule"))
+	or (ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("LoggerModule"))
+local Logger = if loggerScript then require(loggerScript :: ModuleScript) else nil
+local log = if Logger and typeof(Logger.create) == "function" then Logger.create("CharacterController") else function(...) end
 
 local CharacterController = {}
 

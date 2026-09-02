@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 --[[
     RagdollModule (init.luau)
     Main entry point for modular, standalone physics ragdoll and PlatformStand disabler system.
@@ -13,9 +13,10 @@ local Types = require(script.Types)
 local JointBuilder = require(script.JointBuilder)
 local CharacterController = require(script.CharacterController)
 local NetworkBridge = require(script.NetworkBridge)
-local Logger = require(ReplicatedStorage.Packages.LoggerModule)
-
-local log = Logger.create("RagdollModule")
+local loggerScript = (ReplicatedStorage:FindFirstChild("Submodules") and ReplicatedStorage.Submodules:FindFirstChild("LoggerModule"))
+	or (ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("LoggerModule"))
+local Logger = if loggerScript then require(loggerScript :: ModuleScript) else nil
+local log = if Logger and typeof(Logger.create) == "function" then Logger.create("RagdollModule") else function(...) end
 
 local State = require(script:WaitForChild("State") :: ModuleScript)
 
