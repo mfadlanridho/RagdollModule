@@ -179,7 +179,17 @@ function RagdollModule.Enable(character: Model, options: (number | RagdollOption
 			else
 				-- 3. If Motor6D without existing BallSocket, generate new BallSocketConstraint & Attachment pair
 				if isMotor then
-					local socket, att0, att1, noCollide = JointBuilder.CreateRagdollJoint(descendant :: Motor6D, upperAngle, twistLowerAngle, twistUpperAngle)
+					local jointUpper = upperAngle
+					local jointTwistLower = twistLowerAngle
+					local jointTwistUpper = twistUpperAngle
+
+					if descendant.Name == "Neck" then
+						jointUpper = upperAngle or 25
+						jointTwistLower = twistLowerAngle or -25
+						jointTwistUpper = twistUpperAngle or 25
+					end
+
+					local socket, att0, att1, noCollide = JointBuilder.CreateRagdollJoint(descendant :: Motor6D, jointUpper, jointTwistLower, jointTwistUpper)
 					if socket and att0 and att1 and noCollide then
 						jointsConverted += 1
 						table.insert(session.constraints, socket)

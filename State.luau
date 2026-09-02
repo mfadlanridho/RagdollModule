@@ -6,7 +6,14 @@
 --]]
 
 local script = script
-local CharacterController = require(script.Parent:WaitForChild("CharacterController") :: ModuleScript)
+
+local RagdollModule: any = nil
+local function getRagdollModule()
+	if not RagdollModule then
+		RagdollModule = require(script.Parent :: ModuleScript)
+	end
+	return RagdollModule
+end
 
 local RagdollState = {
 	name = "Ragdolled",
@@ -34,24 +41,18 @@ local RagdollState = {
 				end
 			end
 
-			-- Enable physics ragdoll platform stand disabler
-			local humanoid = char:FindFirstChildOfClass("Humanoid")
-			if humanoid then
-				CharacterController.SetPlatformStand(humanoid, true)
-			end
+			-- Enable full physics ragdoll with joint disassembly
+			getRagdollModule().Enable(char)
 		end
 	end,
 
 	exit = function(context, toState)
 		print(string.format("[RagdollState] %s recovering from Ragdoll state.", context.player and context.player.Name or "Unknown"))
 
-		-- Restore humanoid to normal standing state & re-enable animations
+		-- Restore humanoid to normal standing state, restore Motor6Ds & re-enable animations
 		local char = context.character or (context.player and context.player.Character)
 		if char and char.Parent then
-			local humanoid = char:FindFirstChildOfClass("Humanoid")
-			if humanoid then
-				CharacterController.SetPlatformStand(humanoid, false)
-			end
+			getRagdollModule().Disable(char)
 		end
 	end,
 
